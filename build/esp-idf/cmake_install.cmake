@@ -399,32 +399,12 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/lte_types/cmake_install.cmake")
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_hal_i2c/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/hardware/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/lte_test_harness/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/app/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/comms/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/state_machine/cmake_install.cmake")
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_hal_twai/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
@@ -505,11 +485,6 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
   include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_driver_dac/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_hal_i2c/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
@@ -654,11 +629,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_hal_twai/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
   include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/esp_driver_twai/cmake_install.cmake")
 endif()
 
@@ -780,6 +750,41 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
   include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/ulp/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/lte_types/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/hardware/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/lte_driver/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/lte_test_harness/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/app/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/comms/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/build/esp-idf/state_machine/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)

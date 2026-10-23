@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/great/Desktop/IoT_Dev_Role/Overra/let_modem_esp32_project/components/driver
+# Install script for directory: C:/esp/v6.1/esp-idf/components/driver
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

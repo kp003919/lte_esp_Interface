@@ -1,78 +1,69 @@
 #pragma once
 #include <stdint.h>
 
-/** 
-*@file describe the LTE hardware interface
-* 
-*/
+/**
+ * @file lte_hw.h
+ * @brief LTE hardware interface: UART, modem power/reset pins and time.
+ *
+ * This is the lowest layer. It knows nothing about the driver, AT commands
+ * or the state machine above it. Received bytes are handed upward through a
+ * callback registered with lte_hw_set_rx_callback().
+ */
 
 /**
- * @brief Initializes the LTE hardware interface, including UART and any other necessary peripherals.
- * This function should be called during system startup to prepare the LTE hardware 
- * for operation. 
- * 
- * @note This function may be extended in the future to include additional 
- *        hardware initialization steps as needed. 
- * 
+ * @brief Initialises the LTE hardware interface (UART and its receive task).
+ *
+ * Call once at startup. Register the receive callback BEFORE calling this
+ * (lte_driver_init() does that), otherwise early bytes are dropped.
  */
 void lte_hw_init(void);
 
 /**
- * @brief Writes a string of data to the LTE modem via UART.
- * 
- * @param data A null-terminated string to be sent to the LTE modem.
- * 
- * @note This function uses the underlying UART driver to transmit data. 
- *       Ensure that the UART is properly initialized before calling this function.
+ * @brief Writes a null-terminated string to the modem via UART.
+ *
+ * @param data String to send.
+ * @note The UART must be initialised first (lte_hw_init).
  */
 void lte_hw_uart_write(const char *data);
 
+/** Function that receives each byte read from the modem UART. */
+typedef void (*lte_hw_rx_cb_t)(uint8_t byte);
+
 /**
- * @brief Retrieves the current system time in milliseconds since the system started.
- * 
- * @return The number of milliseconds since the system started.
- * 
- * @note This function relies on a millisecond tick counter that is incremented
- *       by a timer interrupt. Ensure that the timer is configured correctly.
+ * @brief Registers the function that receives each byte from the modem.
+ *
+ * Called from the UART receive task context. Pass NULL to unregister.
+ */
+void lte_hw_set_rx_callback(lte_hw_rx_cb_t cb);
+
+/**
+ * @brief Milliseconds since start, from the millisecond tick counter.
+ *
+ * @note The counter only advances when lte_hw_tick_1ms() is called every 1 ms.
  */
 uint32_t lte_hw_ms(void);
 
 /**
- * @brief Handles the reception of a single byte from the LTE modem.
- * 
- * @param byte The byte received from the LTE modem.
- */
-void lte_driver_on_rx_byte(uint8_t byte);
-
-
-/**
- * @brief Executes the power-on sequence for the LTE modem.
- * This function controls the GPIO pins to power on the LTE modem and perform
- * any necessary initialization steps. It should be called during system startup
- * or when the modem needs to be powered on.
+ * @brief Executes the modem power-on sequence (PWRKEY and RESET pins).
  */
 void lte_hw_power_on_sequence(void);
 
 /**
- * @brief Resets the LTE modem by toggling the reset pin.
- * This function performs a hardware reset of the LTE modem, ensuring that it
- * returns to a known state. It should be called when the modem is unresponsive
- * or needs to be reinitialized.
+ * @brief Hardware reset of the modem by pulsing the reset pin.
  */
 void lte_hw_reset_modem(void);
 
 /**
  * @brief Increments the millisecond tick counter.
- * This function should be called from a timer interrupt that fires every 1 ms.
- * It is used to maintain an accurate system time in milliseconds.
+ *
+ * Must be called every 1 ms (timer callback or RTOS tick hook).
  */
-
 void lte_hw_tick_1ms(void);
 
 /**
- * @brief Delays for a specified number of milliseconds.
- * This function provides a simple delay mechanism based on the system tick counter.
+ * @brief Blocks the calling task for the given number of milliseconds.
  *
- * @param ms The number of milliseconds to delay.
+ * Uses the RTOS delay, so other tasks keep running. Must not be called
+ * from an interrupt handler.
  */
 void lte_hw_delay_ms(uint32_t ms);

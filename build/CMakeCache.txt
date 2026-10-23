@@ -366,7 +366,7 @@ Mbed TLS_IS_TOP_LEVEL:STATIC=OFF
 Mbed TLS_SOURCE_DIR:STATIC=C:/esp/v6.1/esp-idf/components/mbedtls/mbedtls
 
 //No help, variable specified on the command line.
-PYTHON:UNINITIALIZED=C:\Users\great\.espressif\python_env\idf6.1_py3.11_env\Scripts\python.exe
+PYTHON:UNINITIALIZED=C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Scripts\python.exe
 
 //No help, variable specified on the command line.
 PYTHON_DEPS_CHECKED:UNINITIALIZED=1
@@ -609,7 +609,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=176
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=177
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -657,7 +657,7 @@ C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS:INTERNAL=1
 //Details about finding Git
 FIND_PACKAGE_MESSAGE_DETAILS_Git:INTERNAL=[C:/Users/great/AppData/Local/Programs/Git/mingw64/bin/git.exe][v2.53.0.windows.1()]
 //Details about finding Python3
-FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[C:/Users/great/.espressif/python_env/idf6.1_py3.11_env/Scripts/python.exe][found components: Interpreter ][v3.11.7()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[C:/Users/great/.espressif/python_env/idf6.1_py3.14_env/Scripts/python.exe][found components: Interpreter ][v3.14.7()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: GIT_EXECUTABLE
@@ -668,10 +668,10 @@ _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=C:/Program Files (x86)/lte_mo
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
 //Development reason failure
 _Python3_Development_REASON_FAILURE:INTERNAL=
-_Python3_EXECUTABLE:INTERNAL=C:/Users/great/.espressif/python_env/idf6.1_py3.11_env/Scripts/python.exe
+_Python3_EXECUTABLE:INTERNAL=C:/Users/great/.espressif/python_env/idf6.1_py3.14_env/Scripts/python.exe
 //Python3 Properties
-_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;7;32;64;;;abi3;C:\Users\great\.platformio\python3\Lib;C:\Users\great\.espressif\python_env\idf6.1_py3.11_env\Lib;C:\Users\great\.espressif\python_env\idf6.1_py3.11_env\Lib\site-packages;C:\Users\great\.espressif\python_env\idf6.1_py3.11_env\Lib\site-packages
-_Python3_INTERPRETER_SIGNATURE:INTERNAL=c21bec0d2f622df49d6163844311eee6
+_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;14;7;32;64;;;abi3;C:\Python314\Lib;C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Lib;C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Lib\site-packages;C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Lib\site-packages
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=b456316e8c19e637be4db6df87913582
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 

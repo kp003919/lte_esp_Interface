@@ -21225,6 +21225,108 @@
                         "children": [
                             {
                                 "children": [],
+                                "depends_on": "SOC_TWAI_SUPPORTED",
+                                "help": "Place the TWAI ISR in to IRAM to reduce latency and increase performance",
+                                "id": "TWAI_ISR_IN_IRAM_LEGACY",
+                                "name": "TWAI_ISR_IN_IRAM_LEGACY",
+                                "range": null,
+                                "title": "Place TWAI ISR function in IRAM",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "SOC_TWAI_SUPPORTED",
+                                "help": "whether to suppress the deprecation warnings when using legacy twai driver\n(driver/twai.h). If you want to continue using the legacy driver,\nand don't want to see related deprecation warnings, you can enable this option.",
+                                "id": "TWAI_SUPPRESS_DEPRECATE_WARN",
+                                "name": "TWAI_SUPPRESS_DEPRECATE_WARN",
+                                "range": null,
+                                "title": "Suppress legacy driver deprecated warning",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "SOC_TWAI_SUPPORTED",
+                                "help": "This configuration option used to bypass the conflict check mechanism with legacy code.",
+                                "id": "TWAI_SKIP_LEGACY_CONFLICT_CHECK",
+                                "name": "TWAI_SKIP_LEGACY_CONFLICT_CHECK",
+                                "range": null,
+                                "title": "Skip legacy driver conflict check",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "SOC_TWAI_SUPPORTED",
+                        "id": "component-config-legacy-driver-configurations-legacy-twai-driver-configurations-C:-esp-v6.1-esp-idf-components-driver-.-twai-Kconfig.twai-1",
+                        "title": "Legacy TWAI Driver Configurations",
+                        "type": "menu"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "SOC_I2C_SUPPORTED",
+                                "help": "whether to suppress the deprecation warnings when using legacy i2c driver\n(driver/i2c.h). If you want to continue using the legacy driver,\nand don't want to see related deprecation warnings, you can enable this option.",
+                                "id": "I2C_SUPPRESS_DEPRECATE_WARN",
+                                "name": "I2C_SUPPRESS_DEPRECATE_WARN",
+                                "range": null,
+                                "title": "Suppress legacy driver deprecated warning",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "SOC_I2C_SUPPORTED",
+                                "help": "This configuration option allows the user to bypass the conflict check mechanism with legacy code.",
+                                "id": "I2C_SKIP_LEGACY_CONFLICT_CHECK",
+                                "name": "I2C_SKIP_LEGACY_CONFLICT_CHECK",
+                                "range": null,
+                                "title": "Skip legacy conflict check",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "SOC_I2C_SUPPORTED",
+                        "id": "component-config-legacy-driver-configurations-legacy-i2c-driver-configurations-C:-esp-v6.1-esp-idf-components-driver-Kconfig-5",
+                        "title": "Legacy I2C Driver Configurations",
+                        "type": "menu"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "SOC_TOUCH_SENSOR_SUPPORTED",
+                                "help": "whether to suppress the deprecation warnings when using legacy touch sensor driver\n(driver/touch_sensor.h). If you want to continue using the legacy driver,\nand don't want to see related deprecation warnings, you can enable this option.",
+                                "id": "TOUCH_SUPPRESS_DEPRECATE_WARN",
+                                "name": "TOUCH_SUPPRESS_DEPRECATE_WARN",
+                                "range": null,
+                                "title": "Suppress legacy driver deprecated warning",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "SOC_TOUCH_SENSOR_SUPPORTED",
+                                "help": "This configuration option allows the user to bypass the conflict check mechanism with legacy code.",
+                                "id": "TOUCH_SKIP_LEGACY_CONFLICT_CHECK",
+                                "name": "TOUCH_SKIP_LEGACY_CONFLICT_CHECK",
+                                "range": null,
+                                "title": "Skip legacy conflict check",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "SOC_TOUCH_SENSOR_SUPPORTED",
+                        "id": "component-config-legacy-driver-configurations-legacy-touch-sensor-driver-configurations-C:-esp-v6.1-esp-idf-components-driver-Kconfig-22",
+                        "title": "Legacy Touch Sensor Driver Configurations",
+                        "type": "menu"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-legacy-driver-configurations-C:-esp-v6.1-esp-idf-components-driver-Kconfig-1",
+                "title": "Legacy Driver Configurations",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [
+                            {
+                                "children": [],
                                 "depends_on": "EFUSE_CUSTOM_TABLE",
                                 "help": "Name of the custom eFuse CSV filename. This path is evaluated\nrelative to the project root directory.",
                                 "id": "EFUSE_CUSTOM_TABLE_FILENAME",
