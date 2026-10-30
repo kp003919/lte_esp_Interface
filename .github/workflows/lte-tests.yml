@@ -16,6 +16,7 @@ jobs:
             -Icomponents/hardware/include \
             -Icomponents/lte_driver/include \
             -Icomponents/lte_types/include \
+            -Icomponents/comms/include \
             -Icomponents/state_machine/include \
             -Itests/include \
             components/state_machine/lte_sm.c \
