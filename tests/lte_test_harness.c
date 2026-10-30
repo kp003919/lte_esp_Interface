@@ -70,6 +70,7 @@ static void advance_time_ms(uint32_t ms)
    Individual test cases
    ------------------------------- */
 
+// Test: Successful attach and PDP activation   
 static int test_attach_ok(void)
 {
     printf("TEST: Attach OK -> PDP\n");
@@ -82,6 +83,7 @@ static int test_attach_ok(void)
     step_sm();
 
     LteSmState_t st = lte_sm_get_state();
+    // expected state is LTE_SM_PDP after successful attach 
     if (st == LTE_SM_PDP) {
         printf("PASS: state = LTE_SM_PDP\n");
         return 1;
@@ -91,6 +93,7 @@ static int test_attach_ok(void)
     }
 }
 
+// Test: Attach error leads to REATTACH or ERROR state
 static int test_attach_error_retry(void)
 {
     printf("TEST: Attach ERROR -> REATTACH\n");
@@ -100,7 +103,8 @@ static int test_attach_error_retry(void)
 
     inject_line("ERROR");
     step_sm();
-
+    
+    // After an attach error, the state machine should transition to REATTACH or ERROR  
     LteSmState_t st = lte_sm_get_state();
     if (st == LTE_SM_REATTACH || st == LTE_SM_ERROR) {
         printf("PASS: state = %d (REATTACH/ERROR acceptable)\n", st);
@@ -111,6 +115,7 @@ static int test_attach_error_retry(void)
     }
 }
 
+// Test: Successful PDP activation leads to OPEN_SOCKET state   
 static int test_pdp_ok(void)
 {
     printf("TEST: PDP OK -> OPEN_SOCKET\n");
@@ -119,6 +124,7 @@ static int test_pdp_ok(void)
     step_sm();
 
     LteSmState_t st = lte_sm_get_state();
+    // expected state is LTE_SM_OPEN_SOCKET after successful PDP activation 
     if (st == LTE_SM_OPEN_SOCKET) {
         printf("PASS: state = LTE_SM_OPEN_SOCKET\n");
         return 1;
@@ -128,13 +134,15 @@ static int test_pdp_ok(void)
     }
 }
 
+// Test: +CEREG:0 indicates network lost, should transition to ERROR or REATTACH    
 static int test_cereg_network_lost(void)
 {
     printf("TEST: +CEREG:0 -> ERROR/REATTACH\n");
 
     inject_line("+CEREG: 0,0");
     step_sm();
-
+    
+    // After receiving +CEREG:0, the state machine should transition to ERROR or REATTACH   
     LteSmState_t st = lte_sm_get_state();
     if (st == LTE_SM_ERROR || st == LTE_SM_REATTACH) {
         printf("PASS: state = %d (ERROR/REATTACH)\n", st);
@@ -145,6 +153,7 @@ static int test_cereg_network_lost(void)
     }
 }
 
+// Test: Timeout during attach should lead to ERROR state   
 static int test_timeout_attach(void)
 {
     printf("TEST: Attach timeout -> ERROR\n");
@@ -152,7 +161,8 @@ static int test_timeout_attach(void)
     /* Assume we are in LTE_SM_ATTACH with active command */
     /* Advance time beyond TIMEOUT_ATTACH */
     advance_time_ms(20000);  /* 20 seconds */
-
+    
+    // After timeout, the state machine should transition to ERROR state
     LteSmState_t st = lte_sm_get_state();
     if (st == LTE_SM_ERROR) {
         printf("PASS: state = LTE_SM_ERROR (timeout)\n");
@@ -169,14 +179,14 @@ static int test_timeout_attach(void)
 
 void lte_run_all_tests(void)
 {
-    int pass = 0;
-    int total = 0;
+    int pass = 0;  // Count of passed tests
+    int total = 0;  // Count of total tests
 
     /* Initialize hardware layer in test mode if needed */
     lte_hw_init();
 
     /* You may want to reset state machine to INIT before each test */
-
+    lte_sm_reset(); 
     total++; pass += test_attach_ok();
     total++; pass += test_attach_error_retry();
     total++; pass += test_pdp_ok();
