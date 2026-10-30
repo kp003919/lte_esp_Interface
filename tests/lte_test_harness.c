@@ -61,6 +61,8 @@ static void step_sm(void)
 static void advance_time_ms(uint32_t ms)
 {
     uint32_t start = lte_hw_ms();
+    lte_hw_delay_ms(1);   /* move the fake clock forward */
+
     while ((lte_hw_ms() - start) < ms) {
         step_sm();
     }
@@ -186,11 +188,15 @@ void lte_run_all_tests(void)
     lte_hw_init();
 
     /* You may want to reset state machine to INIT before each test */
-    lte_sm_reset(); 
+    
     total++; pass += test_attach_ok();
+    
     total++; pass += test_attach_error_retry();
+ 
     total++; pass += test_pdp_ok();
+ 
     total++; pass += test_cereg_network_lost();
+  
     total++; pass += test_timeout_attach();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
