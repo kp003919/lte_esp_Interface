@@ -1,0 +1,29 @@
+name: LTE tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build host test program
+        run: |
+          gcc -Wall -Wextra -g \
+            -Icomponents/hardware/include \
+            -Icomponents/lte_driver/include \
+            -Icomponents/lte_types/include \
+            -Icomponents/state_machine/include \
+            -Itests/include \
+            components/state_machine/lte_sm.c \
+            components/lte_driver/lte_driver.c \
+            components/hardware/lte_hw_test.c \
+            tests/lte_test_harness.c \
+            tests/host_main.c \
+            -o lte_tests
+
+      - name: Run tests
+        run: ./lte_tests
