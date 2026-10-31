@@ -1,0 +1,41 @@
+Command: C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Scripts\python.exe C:\esp\v6.1\esp-idf\tools/idf_monitor.py -p COM7 -b 115200 --toolchain-prefix xtensa-esp32s3-elf- --target esp32s3 --revision 0 C:\Users\great\Desktop\IoT_Dev_Role\Overra\let_modem_esp32_project\build\lte_modem_project.elf C:\Users\great\Desktop\IoT_Dev_Role\Overra\let_modem_esp32_project\build\bootloader\bootloader.elf --force-color -m 'C:\Users\great\.espressif\python_env\idf6.1_py3.14_env\Scripts\python.exe' 'C:\esp\v6.1\esp-idf\tools\idf.py' '-p' 'COM7'
+--- WARNING: GDB cannot open serial ports accessed as COMx
+--- NOTE: Using \\.\COM7 instead...
+--- esp-idf-monitor 1.10.0 on \\.\COM7 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+--- 0x403c8700: _stext at ??:?
+--- 0x403c8904: call_start_cpu0 at C:/esp/v6.1/esp-idf/components/bootloader/subproject/main/bootloader_start.c:27
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+--- NOTE: To exit from IDF monitor please use "Ctrl+]". Alternatively, you can use Ctrl+T Ctrl+X to exit.
+
+Traceback (most recent call last):
+  File [35m"C:\esp\v6.1\esp-idf\tools/idf_monitor.py"[0m, line [35m11[0m, in [35m<module>[0m
+    sys.exit([31msubprocess.run[0m[1;31m([sys.executable, '-m', 'esp_idf_monitor'] + sys.argv[1:])[0m.returncode)
+             [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Python314\Lib\subprocess.py"[0m, line [35m557[0m, in [35mrun[0m
+    stdout, stderr = [31mprocess.communicate[0m[1;31m(input, timeout=timeout)[0m
+                     [31m~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Python314\Lib\subprocess.py"[0m, line [35m1213[0m, in [35mcommunicate[0m
+    [31mself.wait[0m[1;31m()[0m
+    [31m~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Python314\Lib\subprocess.py"[0m, line [35m1279[0m, in [35mwait[0m
+    return [31mself._wait[0m[1;31m(timeout=timeout)[0m
+           [31m~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Python314\Lib\subprocess.py"[0m, line [35m1605[0m, in [35m_wait[0m
+    result = _winapi.WaitForSingleObject(self._handle,
+                                         timeout_millis)
+[1;35mKeyboardInterrupt[0m
