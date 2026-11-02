@@ -29,4 +29,35 @@ jobs:
             -o lte_tests
 
       - name: Run tests
-        run: stdbuf -oL timeout 30 ./lte_tests
+        run: |
+          set -o pipefail
+          stdbuf -oL timeout 30 ./lte_tests | tee test_output.txt
+
+      - name: Test report
+        if: always()
+        run: |
+          {
+            echo "## LTE state machine tests"
+            echo
+            if [ -f test_output.txt ]; then
+              echo "| Test | Result |"
+              echo "|---|---|"
+              awk '
+                /^TEST: /  { name = substr($0, 7) }
+                /^PASS/    { printf "| %s | ✅ Pass |\n", name }
+                /^FAIL/    { printf "| %s | ❌ Fail |\n", name }
+              ' test_output.txt
+              echo
+              grep "TEST SUMMARY" test_output.txt || echo "No summary line found (the program may have stopped early)."
+            else
+              echo "No test output: the build or the test run did not start."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save full log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lte-test-log
+          path: test_output.txt
+          if-no-files-found: ignore
