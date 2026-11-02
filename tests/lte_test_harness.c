@@ -100,6 +100,57 @@ static void sm_start_in_pdp(void)
     step_sm();                       /* sends AT+CGACT=1,1, state -> PDP */
 }
 
+static void sm_start_in_socket(void)
+{
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_REOPEN_SOCKET);
+    step_sm();                       /* opens TCP, state -> OPEN_SOCKET */
+}
+
+static void sm_start_in_mqtt_connect(void)
+{
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_MQTT_RECONNECT);
+    step_sm();                       /* sends MQTT connect, state -> MQTT_CONNECT */
+}
+
+static void sm_start_in_mqtt_subscribe(void)
+{
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_MQTT_RESUBSCRIBE);
+    step_sm();                       /* sends subscribe, state -> MQTT_SUBSCRIBE */
+}
+
+/* A modem reply followed by a tick: what the real main loop does. */
+static void modem_reply(const char *line)
+{
+    deliver_line(line);
+    step_sm();
+}
+
+/* Power on the machine and move it to WAIT_BOOT (AT sent). */
+static void sm_start_boot(void)
+{
+    lte_sm_init();
+    step_sm();                       /* INIT -> POWER_ON */
+    step_sm();                       /* POWER_ON -> WAIT_BOOT */
+}
+
+typedef void (*start_fn_t)(void);
+
+/* Compare the current state with the expected one and print the verdict. */
+static int check_state(LteSmState_t expect, const char *what)
+{
+    LteSmState_t st = lte_sm_get_state();
+
+    if (st == expect) {
+        printf("PASS: %s (state = %d)\n", what, st);
+        return 1;
+    }
+    printf("FAIL: %s: state = %d (expected %d)\n", what, st, expect);
+    return 0;
+}
+
 /* -------------------------------
    Individual test cases
    ------------------------------- */
@@ -376,6 +427,233 @@ static int test_boot_silence_reboot(void)
     return 1;
 }
 
+/* ============================================================================
+   Recovery tests: every command has its own failure path
+   ============================================================================ */
+
+/* A failure reply in a state must lead to that command's recovery state. */
+static int test_reply_recovery(const char *name, start_fn_t start,
+                               const char *reply, LteSmState_t expect)
+{
+    printf("TEST: %s\n", name);
+    start();
+    deliver_line(reply);
+    return check_state(expect, name);
+}
+
+/* No reply for longer than the command timeout must also lead to recovery.
+ * The timeout fires when MORE than timeout_ms has passed, so we advance
+ * timeout_ms + 1 and stop right there. */
+static int test_timeout_recovery(const char *name, start_fn_t start,
+                                 uint32_t timeout_ms, LteSmState_t expect)
+{
+    printf("TEST: %s\n", name);
+    start();
+    advance_time_ms(timeout_ms + 1);
+    return check_state(expect, name);
+}
+
+/* The same command failing the maximum number of times must reboot the
+ * modem (see test_retries_exhausted_reboot for the attach version). */
+static int test_retries_exhausted_for(const char *name, start_fn_t start,
+                                      LteSmState_t recovery)
+{
+    const int max_retries = 3;       /* same as MAX_RETRIES in lte_sm.c */
+
+    printf("TEST: %s\n", name);
+    start();
+
+    for (int i = 1; i <= max_retries; i++) {
+        deliver_line("ERROR");
+        if (i < max_retries) {
+            if (lte_sm_get_state() != recovery) {
+                printf("FAIL: %s: failure %d: state = %d (expected %d)\n",
+                       name, i, lte_sm_get_state(), recovery);
+                return 0;
+            }
+            step_sm();               /* recovery state -> command resent */
+        }
+    }
+
+    if (lte_sm_get_state() != LTE_SM_ERROR) {
+        printf("FAIL: %s: after %d failures state = %d (expected ERROR)\n",
+               name, max_retries, lte_sm_get_state());
+        return 0;
+    }
+    step_sm();
+    if (lte_sm_get_state() != LTE_SM_REBOOT_MODEM) {
+        printf("FAIL: %s: state = %d (expected REBOOT_MODEM)\n",
+               name, lte_sm_get_state());
+        return 0;
+    }
+    step_sm();
+    return check_state(LTE_SM_WAIT_BOOT, name);
+}
+
+// Test: "+CME ERROR" is recognised as a failure, like a plain ERROR
+static int test_cme_error_is_failure(void)
+{
+    return test_reply_recovery("+CME ERROR on attach -> REATTACH",
+                               sm_start_in_attach, "+CME ERROR: 30",
+                               LTE_SM_REATTACH);
+}
+
+// Test: one failed attach, then the retry succeeds
+static int test_attach_fail_once_then_ok(void)
+{
+    printf("TEST: attach fails once, retry succeeds\n");
+    sm_start_in_attach();
+
+    modem_reply("ERROR");            /* fail; the tick resends the command */
+    if (lte_sm_get_state() != LTE_SM_ATTACH) {
+        printf("FAIL: state = %d (expected ATTACH after retry)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    deliver_line("OK");
+    return check_state(LTE_SM_PDP, "retry succeeded");
+}
+
+// Test: a success clears the retry counter, so old failures do not add up
+static int test_retry_counter_reset(void)
+{
+    printf("TEST: success resets the retry counter\n");
+    sm_start_in_attach();
+
+    modem_reply("ERROR");            /* failure 1 */
+    modem_reply("ERROR");            /* failure 2 */
+    deliver_line("OK");              /* success: counter must go back to 0 */
+    if (lte_sm_get_state() != LTE_SM_PDP) {
+        printf("FAIL: state = %d (expected PDP)\n", lte_sm_get_state());
+        return 0;
+    }
+
+    /* Start a new attach and fail once. If the counter was NOT cleared this
+     * would be failure number 3 and the machine would go to ERROR. */
+    lte_sm_force_state(LTE_SM_REATTACH);
+    step_sm();
+    deliver_line("ERROR");
+    return check_state(LTE_SM_REATTACH, "one failure after a success");
+}
+
+/* ============================================================================
+   Boot tests
+   ============================================================================ */
+
+// Test: a SIM that is not ready blocks the boot, and it continues once ready
+static int test_sim_not_ready(void)
+{
+    printf("TEST: SIM not ready blocks boot, then recovers\n");
+    sm_start_boot();
+    modem_reply("OK");               /* AT   -> sends ATE0     */
+    modem_reply("OK");               /* ATE0 -> sends AT+CPIN? */
+
+    modem_reply("+CPIN: SIM PIN");   /* SIM locked */
+    modem_reply("OK");
+    modem_reply("OK");
+    modem_reply("OK");               /* if boot wrongly moved on, this would be ATTACH */
+
+    if (lte_sm_get_state() != LTE_SM_CHECK_SIM) {
+        printf("FAIL: state = %d (expected CHECK_SIM, boot must wait)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    /* After the step timeout the machine asks again; now the SIM is ready. */
+    advance_time_ms(2000);
+    modem_reply("+CPIN: READY");
+    modem_reply("OK");               /* CPIN done -> sends APN   */
+    modem_reply("OK");               /* APN done  -> sends CEREG */
+    modem_reply("OK");               /* CEREG done -> attach     */
+    return check_state(LTE_SM_ATTACH, "boot continued after SIM ready");
+}
+
+// Test: errors on the APN and CEREG steps are not critical
+static int test_boot_noncritical_errors(void)
+{
+    printf("TEST: APN and CEREG errors do not stop boot\n");
+    sm_start_boot();
+    modem_reply("OK");               /* AT   */
+    modem_reply("OK");               /* ATE0 */
+    modem_reply("+CPIN: READY");
+    modem_reply("OK");               /* CPIN done -> sends APN */
+
+    modem_reply("ERROR");            /* APN failed   -> carry on */
+    modem_reply("ERROR");            /* CEREG failed -> carry on */
+    return check_state(LTE_SM_ATTACH, "boot went on to ATTACH");
+}
+
+/* ============================================================================
+   Registration reports (+CEREG)
+   ============================================================================ */
+
+// Test: "not registered" is normal before the attach has finished
+static int test_cereg_lost_before_attach_ignored(void)
+{
+    printf("TEST: +CEREG 0 while attaching is ignored\n");
+    sm_start_in_attach();
+    deliver_line("+CEREG: 0,0");
+    return check_state(LTE_SM_ATTACH, "still attaching");
+}
+
+// Test: "registered" changes nothing
+static int test_cereg_registered_no_change(void)
+{
+    printf("TEST: +CEREG 1 (registered) changes nothing\n");
+    sm_start_in_pdp();
+    deliver_line("+CEREG: 1");
+    return check_state(LTE_SM_PDP, "still in PDP");
+}
+
+// Test: registration denied is a failure and leads to a re-attach
+static int test_cereg_denied(void)
+{
+    printf("TEST: +CEREG 3 (denied) -> ERROR -> REATTACH\n");
+    sm_start_in_attach();
+    deliver_line("+CEREG: 3");
+
+    if (!check_state(LTE_SM_ERROR, "registration denied")) {
+        return 0;
+    }
+    step_sm();
+    return check_state(LTE_SM_REATTACH, "recovery after denial");
+}
+
+/* ============================================================================
+   Running state
+   ============================================================================ */
+
+// Test: an external failure while running reboots the modem
+static int test_failure_in_run_reboots(void)
+{
+    LteEvent_t ev;
+
+    printf("TEST: failure in RUN -> reboot\n");
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_RUN);
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = LTE_EVENT_ERROR;
+    lte_sm_handle_event(&ev);
+
+    if (!check_state(LTE_SM_ERROR, "failure reported")) {
+        return 0;
+    }
+    step_sm();                       /* RUN has no specific recovery */
+    return check_state(LTE_SM_REBOOT_MODEM, "reboot chosen");
+}
+
+// Test: a stray OK when nothing is pending must not disturb the machine
+static int test_stray_ok_in_run(void)
+{
+    printf("TEST: stray OK in RUN is ignored\n");
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_RUN);
+    deliver_line("OK");
+    return check_state(LTE_SM_RUN, "still RUN");
+}
+
 /* -------------------------------
    Test runner
    ------------------------------- */
@@ -406,6 +684,54 @@ int lte_run_tests(void)
     total++; pass += test_retries_exhausted_reboot();
 
     total++; pass += test_boot_silence_reboot();
+
+    /* Failure replies: each command goes to its own recovery state */
+    total++; pass += test_reply_recovery("PDP error -> REPDP",
+                         sm_start_in_pdp, "ERROR", LTE_SM_REPDP);
+    total++; pass += test_reply_recovery("TCP open error -> REOPEN_SOCKET",
+                         sm_start_in_socket, "ERROR", LTE_SM_REOPEN_SOCKET);
+    total++; pass += test_reply_recovery("MQTT connect error -> MQTT_RECONNECT",
+                         sm_start_in_mqtt_connect, "ERROR", LTE_SM_MQTT_RECONNECT);
+    total++; pass += test_reply_recovery("MQTT subscribe error -> MQTT_RESUBSCRIBE",
+                         sm_start_in_mqtt_subscribe, "ERROR", LTE_SM_MQTT_RESUBSCRIBE);
+    total++; pass += test_cme_error_is_failure();
+
+    /* Silence: each command has its own timeout */
+    total++; pass += test_timeout_recovery("PDP timeout -> REPDP",
+                         sm_start_in_pdp, 10000, LTE_SM_REPDP);
+    total++; pass += test_timeout_recovery("TCP open timeout -> REOPEN_SOCKET",
+                         sm_start_in_socket, 8000, LTE_SM_REOPEN_SOCKET);
+    total++; pass += test_timeout_recovery("MQTT connect timeout -> MQTT_RECONNECT",
+                         sm_start_in_mqtt_connect, 8000, LTE_SM_MQTT_RECONNECT);
+    total++; pass += test_timeout_recovery("MQTT subscribe timeout -> MQTT_RESUBSCRIBE",
+                         sm_start_in_mqtt_subscribe, 8000, LTE_SM_MQTT_RESUBSCRIBE);
+
+    /* Escalation: too many failures reboot the modem */
+    total++; pass += test_retries_exhausted_for("PDP retries exhausted -> reboot",
+                         sm_start_in_pdp, LTE_SM_REPDP);
+    total++; pass += test_retries_exhausted_for("TCP retries exhausted -> reboot",
+                         sm_start_in_socket, LTE_SM_REOPEN_SOCKET);
+    total++; pass += test_retries_exhausted_for("MQTT connect retries exhausted -> reboot",
+                         sm_start_in_mqtt_connect, LTE_SM_MQTT_RECONNECT);
+    total++; pass += test_retries_exhausted_for("MQTT subscribe retries exhausted -> reboot",
+                         sm_start_in_mqtt_subscribe, LTE_SM_MQTT_RESUBSCRIBE);
+
+    /* Retry bookkeeping */
+    total++; pass += test_attach_fail_once_then_ok();
+    total++; pass += test_retry_counter_reset();
+
+    /* Boot sequence details */
+    total++; pass += test_sim_not_ready();
+    total++; pass += test_boot_noncritical_errors();
+
+    /* Registration reports */
+    total++; pass += test_cereg_lost_before_attach_ignored();
+    total++; pass += test_cereg_registered_no_change();
+    total++; pass += test_cereg_denied();
+
+    /* Running state */
+    total++; pass += test_failure_in_run_reboots();
+    total++; pass += test_stray_ok_in_run();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
     return total - pass;
