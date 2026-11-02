@@ -71,6 +71,19 @@ static void advance_time_ms(uint32_t ms)
     }
 }
 
+/* Inject one line and let the state machine handle ONLY that event, with no
+ * forward-path tick afterwards. step_sm() ticks too, and the tick makes the
+ * machine recover at once (for example REATTACH -> ATTACH), so the state we
+ * want to check would already be gone. */
+static void deliver_line(const char *line)
+{
+    LteEvent_t ev;
+
+    inject_line(line);
+    while (lte_driver_get_next_event(&ev))
+        lte_sm_handle_event(&ev);
+}
+
 /* Reset the state machine, then put it in ATTACH or PDP with its command
  * already sent, so an injected reply is routed to the right handler. */
 static void sm_start_in_attach(void)
@@ -119,12 +132,9 @@ static int test_attach_ok(void)
 static int test_attach_error_retry(void)
 {
     printf("TEST: Attach ERROR -> REATTACH\n");
+    sm_start_in_attach();
 
-    inject_line("+CGATT:0");
-    step_sm();
-
-    inject_line("ERROR");
-    step_sm();
+    deliver_line("ERROR");   /* modem rejects AT+CGATT=1 */
     
     // After an attach error, the state machine should transition to REATTACH or ERROR  
     LteSmState_t st = lte_sm_get_state();
@@ -161,9 +171,9 @@ static int test_pdp_ok(void)
 static int test_cereg_network_lost(void)
 {
     printf("TEST: +CEREG:0 -> ERROR/REATTACH\n");
+    sm_start_in_pdp();       /* a state where the network is expected */
 
-    inject_line("+CEREG: 0,0");
-    step_sm();
+    deliver_line("+CEREG: 0,0");
     
     // After receiving +CEREG:0, the state machine should transition to ERROR or REATTACH   
     LteSmState_t st = lte_sm_get_state();
@@ -180,18 +190,21 @@ static int test_cereg_network_lost(void)
 static int test_timeout_attach(void)
 {
     printf("TEST: Attach timeout -> ERROR\n");
+    sm_start_in_attach();    /* AT+CGATT=1 sent, no reply will come */
 
-    /* Assume we are in LTE_SM_ATTACH with active command */
-    /* Advance time beyond TIMEOUT_ATTACH */
-    advance_time_ms(20000);  /* 20 seconds */
-    
-    // After timeout, the state machine should transition to ERROR state
+    /* TIMEOUT_ATTACH is 30000 ms and the watchdog fires when MORE than that
+     * has passed, so advance exactly 30001 ms. Any further and the machine
+     * would already have recovered and sent the command again. */
+    advance_time_ms(30001);
+
+    /* On timeout the machine enters ERROR and, in the same tick, maps it to
+     * the recovery state REATTACH. Either one proves the timeout fired. */
     LteSmState_t st = lte_sm_get_state();
-    if (st == LTE_SM_ERROR) {
-        printf("PASS: state = LTE_SM_ERROR (timeout)\n");
+    if (st == LTE_SM_ERROR || st == LTE_SM_REATTACH) {
+        printf("PASS: state = %d (timeout -> ERROR/REATTACH)\n", st);
         return 1;
     } else {
-        printf("FAIL: state = %d (expected LTE_SM_ERROR)\n", st);
+        printf("FAIL: state = %d (expected ERROR/REATTACH)\n", st);
         return 0;
     }
 }
