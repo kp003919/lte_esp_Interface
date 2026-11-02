@@ -313,6 +313,69 @@ static int test_retries_exhausted_reboot(void)
     return 1;
 }
 
+// Test: a modem that never answers AT is retried, then rebooted
+static int test_boot_silence_reboot(void)
+{
+    /* Same values as BOOT_STEP_TIMEOUT_MS and BOOT_MAX_SENDS in lte_sm.c.
+     * If you change them there, change them here too. */
+    const uint32_t step_timeout_ms = 2000;
+    const uint32_t max_sends       = 15;
+    const uint32_t expected_ms     = step_timeout_ms * max_sends;  /* 30000 */
+
+    printf("TEST: boot silence -> retries -> reboot\n");
+
+    lte_sm_init();
+    step_sm();                       /* INIT -> POWER_ON              */
+    step_sm();                       /* POWER_ON -> WAIT_BOOT, AT sent */
+
+    if (lte_sm_get_state() != LTE_SM_WAIT_BOOT) {
+        printf("FAIL: state = %d (expected WAIT_BOOT)\n", lte_sm_get_state());
+        return 0;
+    }
+
+    /* The modem stays silent. Move time forward 1 ms at a time until the
+     * machine stops waiting (cap at 40 s so a bug cannot hang the test). */
+    uint32_t waited = 0;
+    while (lte_sm_get_state() == LTE_SM_WAIT_BOOT && waited < 40000) {
+        lte_hw_delay_ms(1);
+        step_sm();
+        waited++;
+    }
+
+    /* It must give up with ERROR, and only after about 15 tries of 2 s
+     * each. Giving up much earlier would mean too few retries. */
+    if (lte_sm_get_state() != LTE_SM_ERROR) {
+        printf("FAIL: after %u ms state = %d (expected ERROR)\n",
+               (unsigned)waited, lte_sm_get_state());
+        return 0;
+    }
+    if (waited < expected_ms - step_timeout_ms ||
+        waited > expected_ms + step_timeout_ms) {
+        printf("FAIL: gave up after %u ms (expected about %u ms)\n",
+               (unsigned)waited, (unsigned)expected_ms);
+        return 0;
+    }
+
+    /* A boot failure has no specific recovery state, so it must reboot. */
+    step_sm();
+    if (lte_sm_get_state() != LTE_SM_REBOOT_MODEM) {
+        printf("FAIL: state = %d (expected REBOOT_MODEM)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    step_sm();                       /* reset the modem, restart boot */
+    if (lte_sm_get_state() != LTE_SM_WAIT_BOOT) {
+        printf("FAIL: after reboot state = %d (expected WAIT_BOOT)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    printf("PASS: gave up after %u ms -> REBOOT_MODEM -> WAIT_BOOT\n",
+           (unsigned)waited);
+    return 1;
+}
+
 /* -------------------------------
    Test runner
    ------------------------------- */
@@ -341,6 +404,8 @@ int lte_run_tests(void)
     total++; pass += test_full_path_to_run();
 
     total++; pass += test_retries_exhausted_reboot();
+
+    total++; pass += test_boot_silence_reboot();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
     return total - pass;
