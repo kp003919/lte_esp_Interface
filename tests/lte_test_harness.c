@@ -265,7 +265,8 @@ static int test_full_path_to_run(void)
    Test runner
    ------------------------------- */
 
-void lte_run_all_tests(void)
+/* Runs every test and returns how many FAILED (0 = all passed). */
+int lte_run_tests(void)
 {
     int pass = 0;  // Count of passed tests
     int total = 0;  // Count of total tests
@@ -288,4 +289,11 @@ void lte_run_all_tests(void)
     total++; pass += test_full_path_to_run();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
+    return total - pass;
+}
+
+/* Kept so existing callers (for example the ESP32 app) still work. */
+void lte_run_all_tests(void)
+{
+    (void)lte_run_tests();
 }

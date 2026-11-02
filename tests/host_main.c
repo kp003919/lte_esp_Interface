@@ -1,7 +1,7 @@
-void lte_run_all_tests(void);
+int lte_run_tests(void);
 
 int main(void)
 {
-    lte_run_all_tests();
-    return 0;   /* for now: always "success" */
+    /* 0 = all tests passed; non-zero makes the CI job fail. */
+    return (lte_run_tests() == 0) ? 0 : 1;
 }
