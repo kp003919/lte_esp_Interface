@@ -261,6 +261,58 @@ static int test_full_path_to_run(void)
     return 1;
 }
 
+// Test: the same command failing MAX_RETRIES times must reboot the modem
+static int test_retries_exhausted_reboot(void)
+{
+    /* Same value as MAX_RETRIES in lte_sm.c. If you change it there,
+     * change it here too. */
+    const int max_retries = 3;
+
+    printf("TEST: retries exhausted -> modem reboot\n");
+    sm_start_in_attach();            /* AT+CGATT=1 sent */
+
+    /* Fail the attach until the retry limit is reached. Below the limit
+     * the machine goes to REATTACH and a tick sends the command again. */
+    for (int i = 1; i <= max_retries; i++) {
+        deliver_line("ERROR");
+
+        if (i < max_retries) {
+            if (lte_sm_get_state() != LTE_SM_REATTACH) {
+                printf("FAIL: failure %d: state = %d (expected REATTACH)\n",
+                       i, lte_sm_get_state());
+                return 0;
+            }
+            step_sm();               /* REATTACH -> ATTACH, command resent */
+        }
+    }
+
+    /* The last failure reaches the limit: the machine must give up. */
+    if (lte_sm_get_state() != LTE_SM_ERROR) {
+        printf("FAIL: after %d failures state = %d (expected ERROR)\n",
+               max_retries, lte_sm_get_state());
+        return 0;
+    }
+
+    /* The next tick sees "retries exhausted" and chooses a reboot. */
+    step_sm();
+    if (lte_sm_get_state() != LTE_SM_REBOOT_MODEM) {
+        printf("FAIL: state = %d (expected REBOOT_MODEM)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    /* One more tick performs the reset and restarts the boot sequence. */
+    step_sm();
+    if (lte_sm_get_state() != LTE_SM_WAIT_BOOT) {
+        printf("FAIL: after reboot state = %d (expected WAIT_BOOT)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    printf("PASS: ERROR -> REBOOT_MODEM -> WAIT_BOOT\n");
+    return 1;
+}
+
 /* -------------------------------
    Test runner
    ------------------------------- */
@@ -287,6 +339,8 @@ int lte_run_tests(void)
     total++; pass += test_timeout_attach();
 
     total++; pass += test_full_path_to_run();
+
+    total++; pass += test_retries_exhausted_reboot();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
     return total - pass;
