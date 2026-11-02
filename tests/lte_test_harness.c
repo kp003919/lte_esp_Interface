@@ -209,6 +209,58 @@ static int test_timeout_attach(void)
     }
 }
 
+// Test: complete bring-up from INIT to RUN, one modem reply at a time
+static int test_full_path_to_run(void)
+{
+    printf("TEST: full path INIT -> RUN\n");
+
+    /* Each row is one modem reply and the state expected right after it.
+     * The command the machine has just sent is in the comment. */
+    static const struct {
+        const char  *reply;
+        LteSmState_t expect;
+    } steps[] = {
+        { "OK",            LTE_SM_WAIT_BOOT      },  /* reply to AT       -> sends ATE0       */
+        { "OK",            LTE_SM_CHECK_SIM      },  /* reply to ATE0     -> sends AT+CPIN?   */
+        { "+CPIN: READY",  LTE_SM_CHECK_SIM      },  /* SIM info line (no state change)       */
+        { "OK",            LTE_SM_CHECK_SIM      },  /* end of CPIN       -> sends APN        */
+        { "OK",            LTE_SM_CHECK_SIM      },  /* reply to APN      -> sends CEREG=2    */
+        { "OK",            LTE_SM_ATTACH         },  /* reply to CEREG    -> sends CGATT=1    */
+        { "OK",            LTE_SM_PDP            },  /* attach done       -> sends CGACT      */
+        { "OK",            LTE_SM_OPEN_SOCKET    },  /* PDP active        -> opens TCP        */
+        { "OK",            LTE_SM_MQTT_CONNECT   },  /* TCP open          -> MQTT connect     */
+        { "OK",            LTE_SM_MQTT_SUBSCRIBE },  /* MQTT connected    -> subscribe        */
+        { "OK",            LTE_SM_RUN            },  /* subscribed        -> running          */
+    };
+
+    lte_sm_init();
+
+    /* Two ticks: INIT -> POWER_ON, then POWER_ON -> WAIT_BOOT (sends AT). */
+    step_sm();
+    step_sm();
+
+    if (lte_sm_get_state() != LTE_SM_WAIT_BOOT) {
+        printf("FAIL: after power-on state = %d (expected WAIT_BOOT)\n",
+               lte_sm_get_state());
+        return 0;
+    }
+
+    for (size_t i = 0; i < sizeof(steps) / sizeof(steps[0]); i++) {
+        deliver_line(steps[i].reply);   /* the reply is handled...            */
+        step_sm();                      /* ...then a tick sends what comes next */
+
+        LteSmState_t st = lte_sm_get_state();
+        if (st != steps[i].expect) {
+            printf("FAIL: step %u (reply \"%s\"): state = %d (expected %d)\n",
+                   (unsigned)(i + 1), steps[i].reply, st, steps[i].expect);
+            return 0;
+        }
+    }
+
+    printf("PASS: reached LTE_SM_RUN\n");
+    return 1;
+}
+
 /* -------------------------------
    Test runner
    ------------------------------- */
@@ -232,6 +284,8 @@ void lte_run_all_tests(void)
     total++; pass += test_cereg_network_lost();
   
     total++; pass += test_timeout_attach();
+
+    total++; pass += test_full_path_to_run();
 
     printf("\nTEST SUMMARY: %d/%d passed\n", pass, total);
 }
