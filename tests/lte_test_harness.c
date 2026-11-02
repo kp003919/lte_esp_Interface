@@ -71,6 +71,22 @@ static void advance_time_ms(uint32_t ms)
     }
 }
 
+/* Reset the state machine, then put it in ATTACH or PDP with its command
+ * already sent, so an injected reply is routed to the right handler. */
+static void sm_start_in_attach(void)
+{
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_REATTACH);
+    step_sm();                       /* sends AT+CGATT=1, state -> ATTACH */
+}
+
+static void sm_start_in_pdp(void)
+{
+    lte_sm_init();
+    lte_sm_force_state(LTE_SM_REPDP);
+    step_sm();                       /* sends AT+CGACT=1,1, state -> PDP */
+}
+
 /* -------------------------------
    Individual test cases
    ------------------------------- */
@@ -79,6 +95,7 @@ static void advance_time_ms(uint32_t ms)
 static int test_attach_ok(void)
 {
     printf("TEST: Attach OK -> PDP\n");
+    sm_start_in_attach();
 
     /* Simulate modem responses for attach */
     inject_line("+CGATT:1");
@@ -124,6 +141,7 @@ static int test_attach_error_retry(void)
 static int test_pdp_ok(void)
 {
     printf("TEST: PDP OK -> OPEN_SOCKET\n");
+    sm_start_in_pdp();
 
     inject_line("OK");  /* Assume we are in LTE_SM_PDP and modem replies OK */
     step_sm();
