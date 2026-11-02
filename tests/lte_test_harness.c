@@ -57,14 +57,17 @@ static void step_sm(void)
     lte_sm_handle_event(NULL);
 }
 
-/* Advance "time" for timeout tests (if lte_hw_ms uses a fake tick in test) */
+/* Advance "time" for timeout tests.
+ * On the host the fake clock only moves when lte_hw_delay_ms() is called,
+ * so each loop pass advances it by 1 ms and then lets the state machine
+ * run, so it can notice that a timeout has expired. */
 static void advance_time_ms(uint32_t ms)
 {
     uint32_t start = lte_hw_ms();
-    lte_hw_delay_ms(1);   /* move the fake clock forward */
 
     while ((lte_hw_ms() - start) < ms) {
-        step_sm();
+        lte_hw_delay_ms(1);   /* move the fake clock forward 1 ms */
+        step_sm();            /* let the state machine see the new time */
     }
 }
 
