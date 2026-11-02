@@ -21,6 +21,8 @@ jobs:
             -Itests/include \
             components/state_machine/lte_sm.c \
             components/lte_driver/lte_driver.c \
+            components/comms/lte_mqtt.c \
+            components/comms/lte_tcp.c \
             components/hardware/lte_hw_test.c \
             tests/lte_test_harness.c \
             tests/host_main.c \
