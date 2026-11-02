@@ -29,4 +29,4 @@ jobs:
             -o lte_tests
 
       - name: Run tests
-        run: ./lte_tests
+        run: stdbuf -oL timeout 30 ./lte_tests
