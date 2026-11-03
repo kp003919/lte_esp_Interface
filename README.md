@@ -267,9 +267,9 @@ No reply within 2 s → re‑send. After 15 attempts → modem reboot.
 5. Boot states / `RUN` → no dedicated recovery → escalate directly to reboot
 
 ```
-
-ATTACH --(1/2 failures)--> REATTACH --(tick: retry)--> ATTACH
-ATTACH --(3rd failure)--> ERROR --(tick)--> REBOOT_MODEM --(tick)--> WAIT_BOOT
+###
+  - ATTACH --(1/2 failures)--> REATTACH --(tick: retry)--> ATTACH
+  - ATTACH --(3rd failure)--> ERROR --(tick)--> REBOOT_MODEM --(tick)--> WAIT_BOOT
 
 ```
 
