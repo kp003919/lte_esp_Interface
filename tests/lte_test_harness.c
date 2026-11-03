@@ -661,15 +661,15 @@ static int test_stray_ok_in_run(void)
 /* Runs every test and returns how many FAILED (0 = all passed). */
 int lte_run_tests(void)
 {
-    int pass = 0;  // Count of passed tests
+    int pass = 0;   // Count of passed tests
     int total = 0;  // Count of total tests
 
     /* Initialize hardware layer in test mode if needed */
     lte_hw_init();
 
     /* You may want to reset state machine to INIT before each test */
-    
-    total++; pass += test_attach_ok();
+         
+    total++; pass += test_attach_ok(); 
     
     total++; pass += test_attach_error_retry();
  
