@@ -26,6 +26,28 @@ void lte_hw_init(void);
  */
 void lte_hw_uart_write(const char *data);
 
+/**
+ * @brief Blocks the calling task for the given number of milliseconds.
+ *
+ * Uses the RTOS delay, so other tasks keep running. Must not be called
+ * from an interrupt handler.
+ *
+ * @param ms Number of milliseconds to delay.
+ */
+void lte_hw_delay_ms(uint32_t ms);
+
+/**
+ * @brief Gets the last command sent to the modem.
+ *
+ * @return Pointer to the last command string.
+ */
+const char *lte_hw_last_cmd(void);
+
+/**
+ * @brief Clears the last command sent to the modem.
+ */
+void lte_hw_clear_last_cmd(void);
+
 /** Function that receives each byte read from the modem UART. */
 typedef void (*lte_hw_rx_cb_t)(uint8_t byte);
 

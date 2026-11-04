@@ -46,3 +46,16 @@ void lte_hw_reset_modem(void)
     reset_count++;
     printf("[TEST HW] modem reset\n");
 }
+
+/* Test support: what was the last command sent to the modem? */
+const char *lte_hw_last_cmd(void)
+{
+    return last_cmd;
+}
+
+/* Test support: forget the last command, so a test cannot see
+ * a command left over from an earlier test. */
+void lte_hw_clear_last_cmd(void)
+{
+    last_cmd[0] = '\0';
+}
